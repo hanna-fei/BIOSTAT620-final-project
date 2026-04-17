@@ -67,6 +67,7 @@ Despite its effectiveness in the study, Phase I clinical trials for VLX1570 in p
 ## Top 30 most effective compounds on each cancer type
 ```{r}
 #| echo: false
+#| fig-cap: "Fig. 4"
 readRDS("plots/fig_4.rds")
 ```
 
@@ -82,6 +83,7 @@ I decided to further investigate the top compounds for each cancer, with a focus
 ## Top compounds, filtering by cancer
 ```{r}
 #| echo: false
+#| fig-cap: "Fig. 5"
 readRDS("plots/fig_5.rds")
 ```
 
