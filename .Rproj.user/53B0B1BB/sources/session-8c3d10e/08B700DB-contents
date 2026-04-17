@@ -1,0 +1,29 @@
+---
+title: "BIOSTAT 620 Final Project"
+subtitle: "Evaluating the Effect of Compounds on Cancer Cell Lines"
+author: "Hanna Fei"
+format:
+  revealjs:
+    theme: default
+    fig-width: 7
+    fig-align: center
+engine: knitr
+---
+
+# Introduction: PRISM Dataset
+
+---
+
+## Research Question
+
+--- 
+
+## Methods
+
+---
+
+## Results
+
+---
+
+## Summary

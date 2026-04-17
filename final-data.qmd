@@ -1,0 +1,467 @@
+---
+title: "About the Data"
+format: html
+toc: true
+embed-resources: true
+execute: 
+  message: false
+  warning: false
+---
+
+# Depmap Portal PRISM Dataset
+
+The data was downloaded from the [DepMap Custom Downloads](https://depmap.org/portal/data_page/?tab=customDownloads). The following settings were chosen on the custom downloads page:
+
+-   Export from: Datasets
+
+-   Exclude columns and rows of NAs
+
+-   Add cell line metadata to download
+
+-   Merge into a single file
+
+-   Use all genes/compounds
+
+I chose the "PRISM Repurposing Primary (Viability) per Compound Sample" dataset, which was downloaded as a csv file.
+
+To get the names of each compound, I downloaded the PortalCompounds.csv file from [DepMap All Data](https://depmap.org/portal/data_page/?tab=allData) which contains compound metadata.
+
+# Data Processing Steps
+
+The downloaded dataset was in wide format, with rows representing each cell line and columns representing cell line metadata (name and lineages) and the 6500+ compounds tested on each cell line, with values being the log2FC for the corresponding cell line - compound combination.
+
+The following steps were taken to clean the data for analysis:
+
+-   Using pivot_longer(), the data was converted from wide to long format
+
+-   NAs were dropped to keep only cell line-compound combinations that were tested
+
+-   To add the compound names, the dataset was merged with the PortalCompounds.csv dataset. To do this, I used stringr to format the broad_id (the unique ID for each compound) from the PRISM data in the same way as the format for broad_id in the PortalCompounds dataset. The two datasets were then merged using left_join() by broad_id.
+
+The code below shows these steps:
+
+```{r read-data}
+# data per compound sample
+prism_data <- read.csv("~/Downloads/umich/BIOSTAT620/hanna-fei.github.io/BIOSTAT620-final-project/data/PRISM_Repurposing_Primary_(Viability)_per_Compound_Sample_subsetted.csv", header=TRUE)
+
+# compound metadata
+drug_metadata <- read.csv("~/Downloads/umich/BIOSTAT620/hanna-fei.github.io/BIOSTAT620-final-project/data/PortalCompounds.csv")
+```
+
+```{r packages}
+#| message: false
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(kableExtra)
+library(plotly)
+```
+
+```{r data-cleaning}
+# change prism.data from wide to long format
+prism_long <- prism_data %>% 
+  select(-c(lineage_6, lineage_4)) %>% # drop lineage_6 (molecular features), lineage_4 (all NA)
+  pivot_longer(
+    cols = -c(depmap_id, cell_line_display_name, lineage_1, lineage_2, lineage_3),
+    names_to = "broad_id",
+    values_to = "effect"
+  ) %>% 
+  filter(!is.na(effect)) # drop NAs
+
+# match prism_long drug to drug_metadata SampleIDs
+# change prism_long drug
+prism_long$broad_id <- prism_long$broad_id %>%
+  str_replace(".*(BRD\\.BRD\\..*)", "\\1") %>%
+  str_replace_all("\\.", "-") %>%
+  str_replace("^BRD-BRD-", "BRD:BRD-") %>%
+  str_replace("-$", "")
+
+# change drug_metadata: split SampleIDs with multiple IDs
+drug_metadata <- drug_metadata %>% 
+  separate_rows(SampleIDs, sep = ";")
+
+# rename both drug_metadata SampleIDs to broad_id to match prism_long, and select related cols
+drug_metadata <- drug_metadata %>% 
+  rename(broad_id = SampleIDs)
+drug_metadata <- drug_metadata %>% 
+  select(broad_id, CompoundName, TargetOrMechanism)
+
+# left join both datasets to merge
+prism_merged <- left_join(prism_long, drug_metadata, by = "broad_id")
+```
+
+# Dataset Overview
+
+The resulting dataset has 4,083,076 rows and 9 columns.
+
+## Key variables
+The following variables were used for analysis:
+
+-   **Cancer Type** (`lineage_1`): The broadest lineage type for cell lines in the dataset, used to represent cancer type (Type: Character)
+
+-   **Broad ID** (`broad_id`): The alphanumeric code assigned to each compound (Type: Character)
+
+-   **Compound Name** (`CompoundName`): The common name assigned to each compound (Type: Character)
+
+-   **log2FC** (`effect`): The log2 fold-change of cell abundance in the treatment group relative to the DMSO control (Type: Numeric)
+
+```{r}
+#| echo: false
+head_prism <- head(prism_merged[, c(3,6,8,7)])
+kable_prism <- kable(head_prism, caption = "PRISM dataset (4083076 rows)")
+kable_prism
+```
+
+## EDA
+
+### Data Checks
+
+To make sure the dataset matches what we expect to see, the following checks were performed:
+
+-   Checked the NAs in each column: there are some NAs in CompoundName because not all broad_id have a common name. Then, check which broad_ids have no name. Because only 16 compounds do not have a name; for this analysis, we only use compounds that have a common name for better interpretability.
+
+-   Checked the number of unique values in each column of the dataset
+
+-   Checked the number of rows, head/tail, summary of effect. There were no abnormalities.
+
+-   Checked that each broad_id only has one CompoundName
+
+-   Checked the number of broad_ids for each CompoundName - except for NA, each CompoundName only has one broad_id
+
+-   Checked that the number of unique cell line-compound combinations matches the number of rows
+
+-   Checked the counts of each cell line to see the number of compounds tested on each cell line, and that they were less than 6562.
+
+The code below shows these steps:
+
+```{r data-checks}
+# see number of NAs in each column
+count_na <- colSums(is.na(prism_merged))
+
+# see unique broad_id that have NA CompoundNames
+broad_id_nameless <- prism_merged %>% 
+  filter(is.na(CompoundName)) %>% 
+  distinct(broad_id)
+
+# check number of distinct values in each column
+table_distinct <- prism_merged %>%
+  summarise(across(everything(), n_distinct))
+
+# check number of rows, head and tail, summary of effect
+dim_prism <- dim(prism_merged)
+str_prism <- str(prism_merged)
+head_prism <- head(prism_merged)
+tail_prism <- tail(prism_merged)
+summary_prism <- summary(prism_merged$effect)
+
+# check each broad_id only has one CompoundName
+brd_names <- prism_merged %>%
+  group_by(broad_id) %>%
+  summarise(n = n_distinct(CompoundName)) %>%
+  arrange(desc(n)) %>%
+  head(20)
+
+# check number of broad_id for each CompoundName
+names_brd <- prism_merged %>%
+  group_by(CompoundName) %>%
+  summarise(n = n_distinct(broad_id)) %>%
+  arrange(desc(n)) %>%
+  head(20)
+
+# check unique compound+cell line combos matches nrow
+n_compound_cell <- prism_merged %>% 
+  distinct(depmap_id, broad_id) %>% 
+  nrow()
+
+# look at the counts of each cell line to see how many compounds tested on each cell line (<6562)
+n_cells <- prism_merged %>%
+  count(cell_line_display_name, depmap_id) %>%
+  filter(n_distinct(cell_line_display_name) > 1 | n_distinct(depmap_id) > 1) %>% 
+  arrange(desc(n))
+
+head_cells <- head(n_cells)
+tail_cells <- tail(n_cells)
+```
+My resulting dataset has more cell lines than the website's description because of how the repurposing dataset can include multiple screening batches/releases. The logfold effect should not be largely affected by this slight increase in sample size.
+
+### Visualize distribution of key variables
+
+To visualize the distribution of cancer types and cell lines, we look at the following three plots:
+
+```{r eda-plots}
+#| echo: false
+cancer_counts <- prism_merged %>% 
+  count(lineage_1, sort = TRUE)
+
+ggplot(cancer_counts, aes(x = reorder(lineage_1, n), y = n)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Number of Cell Line x Compound Observations per Cancer Type",
+       x = "Cancer Type",
+       y = "Count")
+
+# unique cell lines per cancer type
+cancer_cells <- prism_merged %>% 
+  group_by(lineage_1) %>% 
+  summarise(n_cell_lines = n_distinct(depmap_id)) %>% 
+  arrange(desc(n_cell_lines))
+
+fig_1 <- ggplot(cancer_cells, aes(x = reorder(lineage_1, n_cell_lines), y = n_cell_lines)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Number of Cell Lines per Cancer Type",
+       x = "Cancer Type",
+       y = "Count")
+
+fig_1
+
+# save fig_1 as png
+ggsave("plots/fig_1.png", plot = fig_1)
+
+# number of subtypes per cancer type
+cancer_subtypes <- prism_merged %>% 
+  group_by(lineage_1) %>% 
+  summarise(n_subtypes = n_distinct(lineage_3)) %>% 
+  arrange(desc(n_subtypes))
+
+ggplot(cancer_subtypes, aes(x = reorder(lineage_1, n_subtypes), y = n_subtypes)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Number of Subtypes per Cancer Type",
+       x = "Cancer Type",
+       y = "Count")
+```
+We can see that lung cancer has the most observations in the dataset, followed by esophagus/stomach, CNS/brain, and skin cancer. This is also reflected in the second plot. In the third plot, we can see that lung cancer has one of the largest number of subtypes (defined by lineage_3). Lymphoid cancer has the largest number of subtypes and one of the largest number of cell lines but relatively less observations, indicating there were fewer compounds tested on this cancer type.
+
+#### Distribution of Drug Effects
+
+Effect is our only continuous variable, and we can look at its distribution in the dataset.
+```{r}
+#| echo: false
+compound_summary <- prism_merged %>%
+  group_by(CompoundName) %>%
+  summarise(
+    mean = mean(effect),
+    SD = sd(effect),
+    median = median(effect),
+    min = min(effect),
+    max = max(effect),
+    n = n(),
+    .groups = "drop"
+  ) %>% 
+  arrange(mean)
+
+kable(head(compound_summary, 10), caption = "Summary Statistics - Top 10 Compounds by Mean Effect on All Cancers")
+
+ggplot(prism_merged, aes(x = effect)) +
+  geom_histogram(bins = 75, fill = "steelblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Distribution of Compound Effects",
+       x = "Effect (logfold change)",
+       y = "Count")
+```
+Some of the top compounds have a relatively high standard deviation, such as CBL0137. This indicates that the performance of some compounds may not be consistent across cell lines. The histogram shows most effects are close to 0, with a left tail that includes some fairly large outliers that could impact averages.
+
+# Code for results plots
+
+Below is the code used for the remaining plots in the report.
+
+#### Fig. 2
+```{r fig-2}
+cancers_ranked <- prism_merged %>%
+  group_by(lineage_1) %>%
+  summarise(mean_lfc = mean(effect, na.rm = TRUE)) %>%
+  mutate(mean_effect = -mean_lfc) %>%
+  arrange(desc(mean_effect))
+
+fig_2 <- ggplot(cancers_ranked, aes(x = reorder(lineage_1, mean_effect), y = mean_effect)) +
+  geom_col(fill = "tomato") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Cancer Sensitivity Ranking",
+       x = "Cancer Type",
+       y = "Average Effect (-mean(log2FC))")
+
+# save as png
+ggsave("plots/fig_2.png", plot = fig_2)
+```
+
+#### Fig. 3
+```{r fig-3}
+compounds_top20 <- prism_merged %>%
+  group_by(CompoundName) %>%
+  summarise(mean_lfc = mean(effect, na.rm = TRUE)) %>%
+  mutate(mean_effect = -mean_lfc) %>% 
+  arrange(desc(mean_effect)) %>%
+  head(20)
+
+fig_3 <- ggplot(compounds_top20, aes(x = reorder(CompoundName, mean_effect), y = mean_effect)) +
+  geom_col(fill = "tomato") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Top 20 Most Effective Compounds",
+       x = "Compound",
+       y = "Average Effect (-mean(log2FC))")
+
+# save as png
+ggsave("plots/fig_3.png", plot = fig_3)
+```
+
+#### Fig. 4
+```{r fig-4}
+# extract top 30 compounds as a list
+compounds_top30 <- prism_merged %>%
+  group_by(CompoundName) %>%
+  summarise(mean_lfc = mean(effect, na.rm = TRUE)) %>%
+  arrange(mean_lfc) %>%
+  slice_head(n = 30) %>% 
+  pull(CompoundName)
+
+# aggregate with cancer types
+heatmap_data <- prism_merged %>%
+  filter(CompoundName %in% compounds_top30) %>% 
+  group_by(lineage_1, CompoundName) %>%
+  summarise(mean_lfc = mean(effect, na.rm = TRUE), .groups = "drop") %>%
+  complete(lineage_1 = unique(prism_merged$lineage_1), 
+           CompoundName = compounds_top30, 
+           fill = list(mean_lfc = NA)) # fill missing combos with NA
+
+# order cancers and compounds by mean logfc
+lineage_ordered <- heatmap_data %>% 
+  group_by(lineage_1) %>% 
+  summarise(score = mean(mean_lfc, na.rm = TRUE)) %>% 
+  arrange(desc(score)) %>% 
+  pull(lineage_1)
+
+compound_ordered <- heatmap_data %>% 
+  group_by(CompoundName) %>% 
+  summarise(score = mean(mean_lfc, na.rm = TRUE)) %>% 
+  arrange(desc(score)) %>% 
+  pull(CompoundName)
+
+# pivot wider
+heatmap_wide <- heatmap_data %>% 
+  pivot_wider(names_from = CompoundName, values_from = mean_lfc) %>% 
+  mutate(lineage_1 = factor(lineage_1, levels = lineage_ordered)) %>% 
+  arrange(lineage_1)
+
+# add order
+heatmap_wide <- heatmap_wide[, c("lineage_1", compound_ordered)]
+
+# convert to matrix
+mat <- as.matrix(heatmap_wide[,-1])
+rownames(mat) <- heatmap_wide$lineage_1
+
+# label for NA values
+hover_text <- ifelse(is.na(mat),
+                     "Not tested",
+                     paste0("Log<sub>2</sub>FC: ", round(mat,2)))
+
+fig_4 <- plot_ly(
+  x = colnames(mat),
+  y = rownames(mat),
+  z = mat,
+  text = hover_text,
+  type = "heatmap",
+  colorscale = "Blues",
+  colorbar = list(title = "log<sub>2</sub>FC"),
+  zauto = FALSE,
+  hovertemplate = paste("Cancer Type: %{y}<br>",
+                        "Compound: %{x}<br>",
+                        "%{text}<extra></extra>")
+) %>% 
+  layout(title = "Cancer - Compound Sensitivity Heatmap (Top 30 Compounds)",
+         xaxis = list(title = "Compound", 
+                      showticklabels = TRUE,
+                      tickangle = 60,
+                      tickfont = list(size = 7)),
+         yaxis = list(title = "Cancer Type", 
+                      showticklabels = TRUE,
+                      tickfont = list(size = 7)),
+         margin = list(l = 100, r = 20, t = 40, b = 130))
+
+# save as rds
+saveRDS(fig_4, "plots/fig_4.rds")
+```
+
+#### Fig. 5
+```{r fig-5}
+df <- prism_merged %>% 
+  group_by(CompoundName, lineage_1) %>% 
+  summarise(mean_lfc = mean(effect, na.rm = TRUE), .groups = "drop") %>% 
+  mutate(effect_strength = -mean_lfc)
+
+df_20 <- function(cancer) {
+
+  df %>%
+    filter(lineage_1 == cancer) %>%
+    arrange(desc(effect_strength)) %>%
+    slice_head(n = 20) %>% 
+    slice(n():1)
+}
+
+init <- df_20(unique(df$lineage_1)[1])
+
+cancers <- unique(df$lineage_1)
+
+buttons <- lapply(cancers, function(cancer) {
+
+  df_c <- df_20(cancer)
+
+  list(
+    method = "update",
+    args = list(
+      list(
+        x = list(df_c$effect_strength),
+        y = list(df_c$CompoundName)
+      ),
+      list(title = paste("Top 20 Compounds - Cancer Type:", cancer),
+           yaxis = list(
+             title = "Compound",
+             automargin = TRUE,
+             tickfont = list(size = 10),
+             categoryorder = "array",
+             categoryarray = df_c$CompoundName
+           ))
+    ),
+    label = cancer
+  )
+})
+
+fig_5 <- plot_ly(
+  x = init$effect_strength,
+  y = init$CompoundName,
+  type = "bar",
+  orientation = "h",
+  hovertemplate = paste("Compound: %{y}<br>",
+                        "-Mean(log<sub>2</sub>FC): %{x:.2f}<extra></extra>")
+) %>%
+  layout(
+    updatemenus = list(
+      list(
+        buttons = buttons,
+        direction = "down",
+        showactive = TRUE,
+        x = 1.02,
+        y = 1,
+        xanchor = "left",
+        yanchor = "top"
+      )
+    ),
+    margin = list(r = 100, l = 250, t = 50, b = 60),
+    title = paste("Top 20 Compounds - Cancer Type:", cancers[1]),
+    xaxis = list(title = "Average Effect (-mean(log<sub>2</sub>FC))"),
+    yaxis = list(title = "Compound",
+                 automargin = TRUE,
+                 tickfont = list(size = 10),
+                 categoryorder = "array",
+                 categoryarray = init$CompoundName)
+  )
+
+# save as rds
+saveRDS(fig_5, "plots/fig_5.rds")
+```

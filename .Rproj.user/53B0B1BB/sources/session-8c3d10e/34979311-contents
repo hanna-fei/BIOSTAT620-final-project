@@ -1,0 +1,30 @@
+project:
+  type: website
+  resources:
+    - plots/
+    - images/
+  output-dir: docs
+
+website:
+  title: "🧬 BIOSTAT 620 Final Project"
+  navbar:
+    background: "#4F94CD"
+    left:
+      - href: index.qmd
+        text: Report
+      - href: final-data.qmd
+        text: About the Data
+      - href: final-slides.qmd
+        text: Presentation
+
+format:
+  html:
+    theme:
+      - cosmo
+    css: styles.css
+    toc: true
+    page-layout: article
+    grid: 
+      margin-width: 250px
+      sidebar-width: 0px
+      body-width: 900px

@@ -1,0 +1,86 @@
+[
+  {
+    "objectID": "final-slides.html#research-question",
+    "href": "final-slides.html#research-question",
+    "title": "BIOSTAT 620 Final Project",
+    "section": "Research Question",
+    "text": "Research Question"
+  },
+  {
+    "objectID": "final-slides.html#methods",
+    "href": "final-slides.html#methods",
+    "title": "BIOSTAT 620 Final Project",
+    "section": "Methods",
+    "text": "Methods"
+  },
+  {
+    "objectID": "final-slides.html#results",
+    "href": "final-slides.html#results",
+    "title": "BIOSTAT 620 Final Project",
+    "section": "Results",
+    "text": "Results"
+  },
+  {
+    "objectID": "final-slides.html#summary",
+    "href": "final-slides.html#summary",
+    "title": "BIOSTAT 620 Final Project",
+    "section": "Summary",
+    "text": "Summary"
+  },
+  {
+    "objectID": "final-data.html",
+    "href": "final-data.html",
+    "title": "About the Data",
+    "section": "",
+    "text": "The data was downloaded from the DepMap Custom Downloads. The following settings were chosen on the custom downloads page:\n\nExport from: Datasets\nExclude columns and rows of NAs\nAdd cell line metadata to download\nMerge into a single file\nUse all genes/compounds\n\nI chose the “PRISM Repurposing Primary (Viability) per Compound Sample” dataset, which was downloaded as a csv file.\nTo get the names of each compound, I downloaded the PortalCompounds.csv file from DepMap All Data which contains compound metadata."
+  },
+  {
+    "objectID": "final-data.html#key-variables",
+    "href": "final-data.html#key-variables",
+    "title": "About the Data",
+    "section": "Key variables",
+    "text": "Key variables\nThe following variables were used for analysis:\n\nCancer Type (lineage_1): The broadest lineage type for cell lines in the dataset, used to represent cancer type (Type: Character)\nBroad ID (broad_id): The alphanumeric code assigned to each compound (Type: Character)\nCompound Name (CompoundName): The common name assigned to each compound (Type: Character)\nlog2FC (effect): The log2 fold-change of cell abundance in the treatment group relative to the DMSO control (Type: Numeric)\n\n\n\n\nPRISM dataset (4083076 rows)\n\n\n\n\n\n\n\n\nlineage_1\nbroad_id\nCompoundName\neffect\n\n\n\n\nTestis\nBRD:BRD-A00047421-001-01-7\nARV-825\n-2.4586193\n\n\nTestis\nBRD:BRD-A00092689-236-04-9\nDOCUSATE\n-0.4395535\n\n\nTestis\nBRD:BRD-A00559310-003-01-1\nW-54011\n-0.6391894\n\n\nTestis\nBRD:BRD-A02971356-001-09-9\nIBOTENIC-ACID\n0.1942027\n\n\nTestis\nBRD:BRD-A06784547-001-03-9\nMRS-1334\n-0.0554949\n\n\nTestis\nBRD:BRD-A08641215-065-05-5\nPOLYMYXIN-B-SULFATE\n0.4509379"
+  },
+  {
+    "objectID": "final-data.html#eda",
+    "href": "final-data.html#eda",
+    "title": "About the Data",
+    "section": "EDA",
+    "text": "EDA\n\nData Checks\nTo make sure the dataset matches what we expect to see, the following checks were performed:\n\nChecked the NAs in each column: there are some NAs in CompoundName because not all broad_id have a common name. Then, check which broad_ids have no name. Because only 16 compounds do not have a name; for this analysis, we only use compounds that have a common name for better interpretability.\nChecked the number of unique values in each column of the dataset\nChecked the number of rows, head/tail, summary of effect. There were no abnormalities.\nChecked that each broad_id only has one CompoundName\nChecked the number of broad_ids for each CompoundName - except for NA, each CompoundName only has one broad_id\nChecked that the number of unique cell line-compound combinations matches the number of rows\nChecked the counts of each cell line to see the number of compounds tested on each cell line, and that they were less than 6562.\n\nThe code below shows these steps:\n\n# see number of NAs in each column\ncount_na &lt;- colSums(is.na(prism_merged))\n\n# see unique broad_id that have NA CompoundNames\nbroad_id_nameless &lt;- prism_merged %&gt;% \n  filter(is.na(CompoundName)) %&gt;% \n  distinct(broad_id)\n\n# check number of distinct values in each column\ntable_distinct &lt;- prism_merged %&gt;%\n  summarise(across(everything(), n_distinct))\n\n# check number of rows, head and tail, summary of effect\ndim_prism &lt;- dim(prism_merged)\nstr_prism &lt;- str(prism_merged)\n\ntibble [4,083,076 × 9] (S3: tbl_df/tbl/data.frame)\n $ depmap_id             : chr [1:4083076] \"ACH-001438\" \"ACH-001438\" \"ACH-001438\" \"ACH-001438\" ...\n $ cell_line_display_name: chr [1:4083076] \"1777NRPMET\" \"1777NRPMET\" \"1777NRPMET\" \"1777NRPMET\" ...\n $ lineage_1             : chr [1:4083076] \"Testis\" \"Testis\" \"Testis\" \"Testis\" ...\n $ lineage_2             : chr [1:4083076] \"Non-Seminomatous Germ Cell Tumor\" \"Non-Seminomatous Germ Cell Tumor\" \"Non-Seminomatous Germ Cell Tumor\" \"Non-Seminomatous Germ Cell Tumor\" ...\n $ lineage_3             : chr [1:4083076] \"Embryonal Carcinoma\" \"Embryonal Carcinoma\" \"Embryonal Carcinoma\" \"Embryonal Carcinoma\" ...\n $ broad_id              : chr [1:4083076] \"BRD:BRD-A00047421-001-01-7\" \"BRD:BRD-A00092689-236-04-9\" \"BRD:BRD-A00559310-003-01-1\" \"BRD:BRD-A02971356-001-09-9\" ...\n $ effect                : num [1:4083076] -2.4586 -0.4396 -0.6392 0.1942 -0.0555 ...\n $ CompoundName          : chr [1:4083076] \"ARV-825\" \"DOCUSATE\" \"W-54011\" \"IBOTENIC-ACID\" ...\n $ TargetOrMechanism     : chr [1:4083076] \"BROMODOMAIN INHIBITOR\" \"LAXATIVE\" \"ANAPHYLATOXIN CHEMOTACTIC RECEPTOR ANTAGONIST\" \"GLUTAMATE RECEPTOR AGONIST\" ...\n\nhead_prism &lt;- head(prism_merged)\ntail_prism &lt;- tail(prism_merged)\nsummary_prism &lt;- summary(prism_merged$effect)\n\n# check each broad_id only has one CompoundName\nbrd_names &lt;- prism_merged %&gt;%\n  group_by(broad_id) %&gt;%\n  summarise(n = n_distinct(CompoundName)) %&gt;%\n  arrange(desc(n)) %&gt;%\n  head(20)\n\n# check number of broad_id for each CompoundName\nnames_brd &lt;- prism_merged %&gt;%\n  group_by(CompoundName) %&gt;%\n  summarise(n = n_distinct(broad_id)) %&gt;%\n  arrange(desc(n)) %&gt;%\n  head(20)\n\n# check unique compound+cell line combos matches nrow\nn_compound_cell &lt;- prism_merged %&gt;% \n  distinct(depmap_id, broad_id) %&gt;% \n  nrow()\n\n# look at the counts of each cell line to see how many compounds tested on each cell line (&lt;6562)\nn_cells &lt;- prism_merged %&gt;%\n  count(cell_line_display_name, depmap_id) %&gt;%\n  filter(n_distinct(cell_line_display_name) &gt; 1 | n_distinct(depmap_id) &gt; 1) %&gt;% \n  arrange(desc(n))\n\nhead_cells &lt;- head(n_cells)\ntail_cells &lt;- tail(n_cells)\n\nMy resulting dataset has more cell lines than the website’s description because of how the repurposing dataset can include multiple screening batches/releases. The logfold effect should not be largely affected by this slight increase in sample size.\n\n\nVisualize distribution of key variables\nTo visualize the distribution of cancer types and cell lines, we look at the following three plots:\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nWe can see that lung cancer has the most observations in the dataset, followed by esophagus/stomach, CNS/brain, and skin cancer. This is also reflected in the second plot. In the third plot, we can see that lung cancer has one of the largest number of subtypes (defined by lineage_3). Lymphoid cancer has the largest number of subtypes and one of the largest number of cell lines but relatively less observations, indicating there were fewer compounds tested on this cancer type.\n\nDistribution of Drug Effects\nEffect is our only continuous variable, and we can look at its distribution in the dataset.\n\n\n\nSummary Statistics - Top 10 Compounds by Mean Effect on All Cancers\n\n\n\n\n\n\n\n\n\n\n\nCompoundName\nmean\nSD\nmedian\nmin\nmax\nn\n\n\n\n\nVLX1570\n-11.357025\n2.934538\n-10.902571\n-26.38896\n-1.7690117\n888\n\n\nTRABECTEDIN\n-9.443772\n3.615260\n-8.537410\n-22.66278\n-0.6230091\n888\n\n\nBEBT-908\n-8.919715\n3.156061\n-8.172827\n-21.72302\n-0.1609495\n888\n\n\nCYC065\n-8.788561\n2.787618\n-8.499342\n-21.42941\n0.0843152\n883\n\n\nCBL0137\n-8.503852\n3.427780\n-7.625761\n-23.13597\n-0.1648164\n888\n\n\nAMISELIMOD\n-8.481377\n2.708598\n-8.058077\n-21.87340\n0.4965089\n883\n\n\nCONVALLATOXIN\n-8.390278\n2.810154\n-7.849803\n-19.85311\n-0.1252889\n888\n\n\nAZD4573\n-8.382492\n2.701403\n-7.740264\n-18.93181\n-1.3698273\n883\n\n\nUBP-296\n-7.980082\n2.891451\n-7.351461\n-21.15067\n3.0685287\n886\n\n\nBMS-214662\n-7.924982\n2.624720\n-7.561185\n-19.36519\n-0.5045074\n888\n\n\n\n\n\n\n\n\n\n\n\n\nSome of the top compounds have a relatively high standard deviation, such as CBL0137. This indicates that the performance of some compounds may not be consistent across cell lines. The histogram shows most effects are close to 0, with a left tail that includes some fairly large outliers that could impact averages."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "",
+    "text": "Data used for this project was DepMap PRISM data from the Broad Institute. The dataset comprises of 6,562 compounds screened at 2.5 uM on 915 cancer cell lines using the PRISM molecular barcoding method (Corsello et al., 2020). All cell lines are barcoded, pooled in groups of 25, and tested with compounds. After 5 days, the barcodes are recovered from the cell lines, and cell line viability is assessed by the abundance of each barcode after screening.\nCompounds are screened in triplicate, and high-quality replicates are used. The data is normalized using ComBat for each compound plate-well combination to adjust for differences between testing across different batches.\n\n\n\nPRISM method overview (Corsello et al., 2020)\n\n\n\n\n\nThe high-throughput nature of the DepMap PRISM dataset makes for a strong practical application in cancer research. It allows us to see how a large number of compounds affect diverse cancer cell lines. Researchers can discover the effect of existing drugs on cancer cells, including non-oncology drugs that can potentially be repurposed for cancer therapeutics.\nThe primary research question driving this analysis is: Which compounds are most effective across different cancer types? To answer this, I compared the average log2 fold-change (log2FC) for each compound across different cancer types."
+  },
+  {
+    "objectID": "index.html#prism-dataset",
+    "href": "index.html#prism-dataset",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "",
+    "text": "Data used for this project was DepMap PRISM data from the Broad Institute. The dataset comprises of 6,562 compounds screened at 2.5 uM on 915 cancer cell lines using the PRISM molecular barcoding method (Corsello et al., 2020). All cell lines are barcoded, pooled in groups of 25, and tested with compounds. After 5 days, the barcodes are recovered from the cell lines, and cell line viability is assessed by the abundance of each barcode after screening.\nCompounds are screened in triplicate, and high-quality replicates are used. The data is normalized using ComBat for each compound plate-well combination to adjust for differences between testing across different batches.\n\n\n\nPRISM method overview (Corsello et al., 2020)"
+  },
+  {
+    "objectID": "index.html#research-question",
+    "href": "index.html#research-question",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "",
+    "text": "The high-throughput nature of the DepMap PRISM dataset makes for a strong practical application in cancer research. It allows us to see how a large number of compounds affect diverse cancer cell lines. Researchers can discover the effect of existing drugs on cancer cells, including non-oncology drugs that can potentially be repurposed for cancer therapeutics.\nThe primary research question driving this analysis is: Which compounds are most effective across different cancer types? To answer this, I compared the average log2 fold-change (log2FC) for each compound across different cancer types."
+  },
+  {
+    "objectID": "index.html#top-30-most-effective-compounds-on-each-cancer-type",
+    "href": "index.html#top-30-most-effective-compounds-on-each-cancer-type",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "Top 30 most effective compounds on each cancer type",
+    "text": "Top 30 most effective compounds on each cancer type\n\n\n\n\n\n\nIn general, the compounds that are most effective overall have a very strong effect across most cancer types. However, the most sensitive cancer types are not necessarily more responsive to the top compounds compared to the most resistant cancer types (Fig. 4). We can further investigate compounds that are effective for specific cancer types.\nCertain compounds vary in efficacy based on cancer type. For example, the efficacy of VLX1570 is relatively less effective vulva/vagina cancer compared to other cancers, whereas Belotecan has a strong effect on vulva/vagina cancer but is less effective other cancers. This suggests that even though certain compounds are more effective globally, they still have different effects based on cancer type.\nBecause the heatmap orders cancer types by sensitivity, we can also notice that some cancers were ranked as more resistant/sensitive with the top 30 compounds, but were not among the most resistant/sensitive overall (Fig. 2), such as eye, prostate, and liver cancer. These inconsistencies suggest that sensitivity of a cancer type may be dependent on compounds rather than overall sensitivity of the cancer.\nI decided to further investigate the top compounds for each cancer, with a focus on these specific cancer types as well as those with variable effects among compounds, as they are likely to be different from the overall top 30 compounds."
+  },
+  {
+    "objectID": "index.html#top-compounds-filtering-by-cancer",
+    "href": "index.html#top-compounds-filtering-by-cancer",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "Top compounds, filtering by cancer",
+    "text": "Top compounds, filtering by cancer\n\n\n\n\n\n\nBy filtering for the top compounds within each cancer type, we can identify which compounds are most effective for each specific cancer type (Fig. 5). For eye and prostate cancer, there are several top compounds not present within the overall top 30, including Elacestrant, CB-5083, and Verdinexor.\nFor adrenal gland cancer, Avitinib is one of the most effective compounds even though it is less effective for other cancers. Similarly, the top compounds for vulva/vagina cancer is quite different: PIM-447 is the fourth most effective compound, but is not in the top 30 overall."
+  }
+]
