@@ -56,7 +56,7 @@ To continue our analysis, we now examine the sensitivity of cancer types and ran
 
 Cancer types ranked by average sensitivity shows which cancers were most/least affected by compounds on average (Fig. 2). This provides a visualization of which cancers are generally more sensitive to drugs and which are more resistant to drugs. Some of the most sensitive cancers include cancer in the Testis, Vulva/Vagina and Myeloid, indicating that these cancer cell lines were most susceptible to reduction in viability. In contrast, some of the most drug resistant cancers include cancer in the Liver, Bowel, Breast, and Pancreas.
 
-### Drugs with highest effect
+### Compounds with highest effect
 
 ![Fig. 3](plots/fig_3.png){fig-align="center"}
 

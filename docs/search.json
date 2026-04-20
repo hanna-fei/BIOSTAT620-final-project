@@ -1,31 +1,45 @@
 [
   {
+    "objectID": "final-slides.html#prism-dataset",
+    "href": "final-slides.html#prism-dataset",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "PRISM Dataset",
+    "text": "PRISM Dataset\nData downloaded from DepMap (Cancer Dependency Map) at the Broad Institute.\n\nPRISM method overview\nPRISM molecular barcoding method\n6,562 compounds screened\n915 cancer cell lines"
+  },
+  {
     "objectID": "final-slides.html#research-question",
     "href": "final-slides.html#research-question",
-    "title": "BIOSTAT 620 Final Project",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
     "section": "Research Question",
-    "text": "Research Question"
+    "text": "Research Question\nWhich compounds are most effective across different cancer types?\n\nMotivation:\n\nHigh-throughput data: applicable to cancer research\nDiscover the effect of existing drugs on cancer cells, including non-oncology drugs"
   },
   {
-    "objectID": "final-slides.html#methods",
-    "href": "final-slides.html#methods",
-    "title": "BIOSTAT 620 Final Project",
-    "section": "Methods",
-    "text": "Methods"
+    "objectID": "final-slides.html#data-overview",
+    "href": "final-slides.html#data-overview",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "Data Overview",
+    "text": "Data Overview\n\nOriginal dataset: wide format with rows of cell lines and columns of compounds.\nAfter data cleaning: long format with rows of unique cell line x compound combinations tested\n4,083,076 observations: 6,562 compounds tested with 915 cell lines representing 29 cancer types\n\n\nhead of prism dataset"
   },
   {
-    "objectID": "final-slides.html#results",
-    "href": "final-slides.html#results",
-    "title": "BIOSTAT 620 Final Project",
-    "section": "Results",
-    "text": "Results"
+    "objectID": "final-slides.html#key-variables",
+    "href": "final-slides.html#key-variables",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "Key variables",
+    "text": "Key variables\n\nCancer Type (lineage_1): The broadest lineage type for cell lines in the dataset\nBroad ID (broad_id): The alphanumeric code assigned to each compound\nCompound Name (CompoundName): The common name assigned to each compound\nlog2FC (effect): The indicator of interest: log2 fold-change of cell abundance in the treatment group relative to the control group treated with Dimethyl sulfoxide (DMSO)\n\n\\[ log_{2}\\text{FC} = log_{2}(\\frac{\\text{treatment}}{\\text{control}}) \\]\nInterpretation:\n\n\\(log_{2}\\)FC &lt; 0: less cell abundance compared to DMSO (sensitivity to the compound)\n\\(log_{2}\\)FC = 0: no effect compared to DMSO\n\\(log_{2}\\)FC &gt; 0: more cell abundance compared to DMSO (rare)"
+  },
+  {
+    "objectID": "final-slides.html#exploratory-plots",
+    "href": "final-slides.html#exploratory-plots",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
+    "section": "Exploratory Plots",
+    "text": "Exploratory Plots\n\n\n\n\n\n\nLung cancer is by far the most represented cancer type in the dataset, followed by lymphoid cancer.\nThe distribution of log2FC is slightly left skewed, with most values around 0."
   },
   {
     "objectID": "final-slides.html#summary",
     "href": "final-slides.html#summary",
-    "title": "BIOSTAT 620 Final Project",
+    "title": "Evaluating the Effect of Compounds on Cancer Cell Lines",
     "section": "Summary",
-    "text": "Summary"
+    "text": "Summary\n\nCompounds that are highly effective across all cancers: VLX1570, Trabectedin, BEBT-908\nCompounds that show strong effectiveness only for specific cancers are more informative because they likely reflect specific biological mechanisms.\nBy looking at cancer-specific compound effects and comparing them with the global effects, we can identify which compounds are effective and selective for different cancer types.\n\n\nLimitations:\n\nFocused on the average effects across cell lines: masks variation in effect\nNext step: Adding a measure of variability to identify which compounds are effective and consistent"
   },
   {
     "objectID": "final-data.html",
@@ -39,7 +53,7 @@
     "href": "final-data.html#key-variables",
     "title": "About the Data",
     "section": "Key variables",
-    "text": "Key variables\nThe following variables were used for analysis:\n\nCancer Type (lineage_1): The broadest lineage type for cell lines in the dataset, used to represent cancer type (Type: Character)\nBroad ID (broad_id): The alphanumeric code assigned to each compound (Type: Character)\nCompound Name (CompoundName): The common name assigned to each compound (Type: Character)\nlog2FC (effect): The log2 fold-change of cell abundance in the treatment group relative to the DMSO control (Type: Numeric)\n\n\n\n\nPRISM dataset (4083076 rows)\n\n\n\n\n\n\n\n\nlineage_1\nbroad_id\nCompoundName\neffect\n\n\n\n\nTestis\nBRD:BRD-A00047421-001-01-7\nARV-825\n-2.4586193\n\n\nTestis\nBRD:BRD-A00092689-236-04-9\nDOCUSATE\n-0.4395535\n\n\nTestis\nBRD:BRD-A00559310-003-01-1\nW-54011\n-0.6391894\n\n\nTestis\nBRD:BRD-A02971356-001-09-9\nIBOTENIC-ACID\n0.1942027\n\n\nTestis\nBRD:BRD-A06784547-001-03-9\nMRS-1334\n-0.0554949\n\n\nTestis\nBRD:BRD-A08641215-065-05-5\nPOLYMYXIN-B-SULFATE\n0.4509379"
+    "text": "Key variables\nThe following variables were used for analysis:\n\nCancer Type (lineage_1): The broadest lineage type for cell lines in the dataset, used to represent cancer type (Type: Character)\nBroad ID (broad_id): The alphanumeric code assigned to each compound (Type: Character)\nCompound Name (CompoundName): The common name assigned to each compound (Type: Character)\nlog2FC (effect): The log2 fold-change of cell abundance in the treatment group relative to the DMSO control (Type: Numeric)\n\n\n\n\nPRISM dataset (4083076 rows)\n\n\n\n\n\n\n\n\n\ncell_line_display_name\nlineage_1\nbroad_id\nCompoundName\neffect\n\n\n\n\n1777NRPMET\nTestis\nBRD:BRD-A00047421-001-01-7\nARV-825\n-2.4586193\n\n\n1777NRPMET\nTestis\nBRD:BRD-A00092689-236-04-9\nDOCUSATE\n-0.4395535\n\n\n1777NRPMET\nTestis\nBRD:BRD-A00559310-003-01-1\nW-54011\n-0.6391894\n\n\n1777NRPMET\nTestis\nBRD:BRD-A02971356-001-09-9\nIBOTENIC-ACID\n0.1942027\n\n\n1777NRPMET\nTestis\nBRD:BRD-A06784547-001-03-9\nMRS-1334\n-0.0554949\n\n\n1777NRPMET\nTestis\nBRD:BRD-A08641215-065-05-5\nPOLYMYXIN-B-SULFATE\n0.4509379"
   },
   {
     "objectID": "final-data.html#eda",

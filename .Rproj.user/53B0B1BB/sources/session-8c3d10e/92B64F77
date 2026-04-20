@@ -12,8 +12,8 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "103,0",
-        "scrollLine": "94",
+        "cursorPosition": "98,464",
+        "scrollLine": "93",
         "rmdVisualMode": "false",
         "rmdVisualWrapConfigured": "true",
         "docOutlineVisible": "1",
@@ -22,11 +22,11 @@
         "docOutlineSize": "144"
     },
     "folds": "",
-    "lastKnownWriteTime": 1776468485,
+    "lastKnownWriteTime": 1776551210,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1776468485601,
+    "last_content_update": 1776551210218,
     "read_only": false,
     "read_only_alternatives": []
 }

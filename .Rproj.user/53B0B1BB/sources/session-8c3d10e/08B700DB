@@ -8,19 +8,20 @@
     "dirty": false,
     "created": 1776465687135.0,
     "source_on_save": false,
-    "relative_order": 6,
+    "relative_order": 4,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "17,0",
-        "scrollLine": "0"
+        "cursorPosition": "141,12",
+        "scrollLine": "137",
+        "docOutlineVisible": "1"
     },
     "folds": "",
-    "lastKnownWriteTime": 1776466305,
+    "lastKnownWriteTime": 1776553327,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1776466305092,
+    "last_content_update": 1776553327303,
     "read_only": false,
     "read_only_alternatives": []
 }

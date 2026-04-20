@@ -1,0 +1,4 @@
+"0","#| echo: false"
+"0","head_prism <- head(prism_merged[, c(2,3,6,8,7)])"
+"0","kable_prism <- kable(head_prism, caption = ""PRISM dataset (4083076 rows)"")"
+"0","kable_prism"
